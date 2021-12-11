@@ -2,12 +2,12 @@ WAT - source code inline tasks analysis tool
 ============================================
 
 - [X] Come up with source comment task definition format
-- [ ] Find specially formatted comments
+- [X] Find specially formatted comments
+- [X] Process them into internal task representation
 - [ ] Determine the source comment format
-- [ ] Process them into internal task representation
 - [ ] Go through source code
 - [ ] Allow actions to run on internal task representation
-- [ ] Allow for configurabe task triggering words
+- [ ] Allow for configurable task triggering words
 
 Source task comment
 -------------------

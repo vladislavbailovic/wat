@@ -40,7 +40,6 @@ struct TaskSource {
 struct Matcher {
 	kind: TaskType,
 	target: String,
-	prefix: String,
 	situational: String,
 	severity: String,
 	comment_pattern: String,
@@ -48,7 +47,6 @@ struct Matcher {
 
 impl Matcher {
 	fn new(kind: TaskType) -> Matcher {
-		let prefix = String::from("@");
 		let situational = String::from(":");
 		let severity = String::from("!");
 		let comment_pattern = String::from("//");
@@ -57,7 +55,7 @@ impl Matcher {
 			TaskType::FIXME => "FIXME".to_string(),
 			TaskType::Custom(tgt) => tgt.to_string(),
 		};
-		return Matcher{ kind, target, prefix, severity, situational, comment_pattern };
+		return Matcher{ kind, target, severity, situational, comment_pattern };
 	}
 }
 
@@ -70,7 +68,12 @@ struct Extractor {
 
 impl Extractor {
 	fn new(mt: Matcher, code: String) -> Extractor {
-		Extractor{ mt, code, lines: vec![ String::from("") ], pos: 0 }
+        let mut lines: Vec<String> = vec![];
+		let raw: Vec<&str> = code.split("\n").collect();
+		for line in raw {
+			lines.push(line.to_string());
+		}
+		Extractor{ mt, code, lines, pos: 0 }
 	}
 
 	fn get_task(&mut self) -> Option<Task> {
@@ -78,28 +81,27 @@ impl Extractor {
 			return None;
 		}
 
-		let lines: Vec<&str> = self.code.split("\n").collect();
-		for line in lines {
-			self.lines.push(line.to_string());
-		}
 		while self.pos < self.lines.len() {
-			self.process_line();
-			self.pos += 1;
+            let task = self.process_line();
+            self.pos += 1;
+            if let None = task {
+                continue;
+            }
+            return task;
 		}
-		None
+        None
 	}
 
-	fn process_line(&mut self) {
+	fn process_line(&mut self) -> Option<Task> {
 		let line = self.lines.get(self.pos)
 			.expect("There should be a line there");
 		if !line.contains(&self.mt.target) {
-			return;
+			return None;
 		}
 
 		let target_len = self.mt.target.chars().count();
 		let byte_pos = line.find(&self.mt.target)
 			.expect("Unable to find byte position of the first match");
-		let before = (&line[0..byte_pos]).trim();
 		let after = (&line[byte_pos+target_len..]).trim();
 		let source = TaskSource{
 			kind: self.mt.kind.clone(),
@@ -115,14 +117,14 @@ impl Extractor {
             context: self.process_context(),
 		};
 
-		dbg!(&task);
+        Some(task)
 	}
 
 	fn process_context(&mut self) -> Option<TaskContext> {
-		let nextLine = self.lines.get(self.pos+1)
+		let next_line = self.lines.get(self.pos+1)
 			.expect("There should be a next line");
 		let mut context: Vec<String> = vec![];
-		if self.mt.comment_pattern == nextLine.trim() {
+		if self.mt.comment_pattern == next_line.trim() {
 			// Hit empty comment line: context delimiter.
 			// Pick up everything until the end of the comment.
 			self.pos += 2; // consume the delimiter line, start at line after.
@@ -135,7 +137,6 @@ impl Extractor {
 				context.push(sans.trim().to_string());
 				self.pos += 1;
 			}
-			// self.pos += ctxLine;
 		} else { return None; }
 		Some(TaskContext{ body: context })
 	}
@@ -171,6 +172,16 @@ fn main() {
 			Some(t) => t,
 			None => break,
 		};
-		dbg!(task);
+        println!("Task {:?}({:?}): {}",
+            &task.source.kind, &task.severity, &task.name);
+        println!("[Found on {}:{}]", &task.source.line, &task.source.column);
+        let ctx = match task.context {
+            Some(ctx) => ctx.body,
+            None => vec![],
+        };
+        for ln in ctx {
+            println!("{}", ln);
+        }
+        println!("--------------------\n");
 	}
 }
