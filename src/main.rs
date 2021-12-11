@@ -1,3 +1,6 @@
+mod mock;
+use mock::CODE;
+
 #[derive(Debug, Clone)]
 enum TaskType {
 	TODO,
@@ -18,6 +21,12 @@ struct Task {
     name: String,
 	source: TaskSource,
 	severity: TaskSeverity,
+    context: Option<TaskContext>,
+}
+
+#[derive(Debug)]
+struct TaskContext {
+    body: Vec<String>,
 }
 
 #[derive(Debug)]
@@ -102,23 +111,17 @@ impl Extractor {
 		let severity = self.determine_severity(&after);
 
 		let task = Task{
-			source,
-			name,
-			severity,
+			source, name, severity,
+            context: self.process_context(),
 		};
 
-		if self.pos == self.lines.len() - 1 {
-			return;
-		}
-
 		dbg!(&task);
-		dbg!(self.process_context());
 	}
 
-	fn process_context(&mut self) -> Vec<&str> {
+	fn process_context(&mut self) -> Option<TaskContext> {
 		let nextLine = self.lines.get(self.pos+1)
 			.expect("There should be a next line");
-		let mut context = vec![];
+		let mut context: Vec<String> = vec![];
 		if self.mt.comment_pattern == nextLine.trim() {
 			// Hit empty comment line: context delimiter.
 			// Pick up everything until the end of the comment.
@@ -129,12 +132,12 @@ impl Extractor {
 				if raw.len() == sans.len() {
 					break;
 				}
-				context.push(sans.trim());
+				context.push(sans.trim().to_string());
 				self.pos += 1;
 			}
 			// self.pos += ctxLine;
-		}
-		return context
+		} else { return None; }
+		Some(TaskContext{ body: context })
 	}
 
 	fn determine_task_name(&self, line: &str) -> String {
@@ -171,51 +174,3 @@ fn main() {
 		dbg!(task);
 	}
 }
-
-
-
-
-const CODE: &str = "
-mport Api from './api';
-
-module.exports = context => {
-
-        const request = context.request;
-
-        const Cache = require( './cache' )( context );
-        const Member = require( './member' )( context );
-
-        return class Hub {
-
-				 // TODO: ensure immutability if privates.
-				 // 
-				 // Idk a comment of some sort goes here.
-				 // Whatever, man.
-				 // 
-				 // Another paragraph.
-                static RQ_LIST_SITES = 'getSites';
-                static RQ_GET_SITE = 'getSiteInfo';
-                static RQ_PREPARE_PUSH = 'preparePush';
-                static RQ_CLEANUP_PUSH = 'cleanupPush';
-
-                constructor( site ) {
-                        this.site = site;
-                        this.member = new Member( site );
-                }
-
-                getSites() {
-                        // @TODO remove stub!
-                        return Promise.resolve(
-                                [ 'body-exposure' ] // TODO!! don't hardcode
-                        );
-						// TODO: use this instead
-                        return new Promise( ( resolve, reject ) => {
-                                this.getData( Hub.RQ_LIST_SITES )
-                                        .then( data => resolve( data || [] ) )
-                                        .catch( reject )
-                                ;
-                        } );
-                }
-		}
-	}
-}";
