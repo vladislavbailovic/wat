@@ -23,8 +23,8 @@ struct Task {
 #[derive(Debug)]
 struct TaskSource {
 	kind: TaskType,
-	line: i32,
-	column: i32,
+	line: usize,
+	column: usize,
 }
 
 #[derive(Debug)]
@@ -55,13 +55,16 @@ impl Matcher {
 		}
 		let target_len = self.target.chars().count();
 
-		let mut idx = -1;
+		let mut idx = 0;
 		let mut comment_pattern = String::from("");
-		for line in code.split("\n") {
+		let lines: Vec<&str> = code.split("\n").collect();
+		while idx < lines.len() {
+			let line = lines.get(idx).expect("There should be a line there");
 			idx += 1;
 			if !line.contains(&self.target) {
 				continue;
 			}
+
 			let byte_pos = line.find(&self.target)
 				.expect("Unable to find byte position of the first match");
 			let before = (&line[0..byte_pos]).trim();
@@ -73,11 +76,10 @@ impl Matcher {
 					TaskType::Custom(n) => TaskType::Custom(n.to_string()),
 				},
 				line: idx,
-				column: byte_pos as i32,
+				column: byte_pos as usize,
 			};
 
 			if comment_pattern.len() == 0 {
-				dbg!("determining comment pattern");
 				comment_pattern = self.determine_comment_pattern(&before);
 			}
 			let name = self.determine_task_name(&after);
@@ -88,7 +90,30 @@ impl Matcher {
 				name,
 				severity,
 			};
+
+			if idx == lines.len() - 1 {
+				break;
+			}
+
+			let nextLine = lines.get(idx).expect("There should be a next line");
+			let mut context = vec![];
+			if comment_pattern == nextLine.trim() {
+				// Hit empty comment line: context delimiter.
+				// Pick up everything until the end of the comment.
+				let mut ctxLine = idx + 1;
+				while ctxLine < lines.len() {
+					let raw = lines.get(ctxLine).expect("context line").trim();
+					let sans = raw.trim_start_matches(&comment_pattern);
+					if raw.len() == sans.len() {
+						break;
+					}
+					context.push(sans.trim());
+					ctxLine += 1;
+				}
+				idx += ctxLine;
+			}
 			dbg!(&task);
+			dbg!(context);
 			
 		};
 		None
@@ -163,6 +188,12 @@ module.exports = context => {
 
         return class Hub {
 
+				 // TODO: ensure immutability if privates.
+				 // 
+				 // Idk a comment of some sort goes here.
+				 // Whatever, man.
+				 // 
+				 // Another paragraph.
                 static RQ_LIST_SITES = 'getSites';
                 static RQ_GET_SITE = 'getSiteInfo';
                 static RQ_PREPARE_PUSH = 'preparePush';
