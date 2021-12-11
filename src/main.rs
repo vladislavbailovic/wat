@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum TaskType {
 	TODO,
 	FIXME,
@@ -34,6 +34,7 @@ struct Matcher {
 	prefix: String,
 	situational: String,
 	severity: String,
+	comment_pattern: String,
 }
 
 impl Matcher {
@@ -41,109 +42,106 @@ impl Matcher {
 		let prefix = String::from("@");
 		let situational = String::from(":");
 		let severity = String::from("!");
+		let comment_pattern = String::from("//");
 		let target = match &kind {
 			TaskType::TODO => "TODO".to_string(),
 			TaskType::FIXME => "FIXME".to_string(),
 			TaskType::Custom(tgt) => tgt.to_string(),
 		};
-		return Matcher{ kind, target, prefix, severity, situational };
+		return Matcher{ kind, target, prefix, severity, situational, comment_pattern };
+	}
+}
+
+struct Extractor {
+	mt: Matcher,
+	code: String,
+	lines: Vec<String>,
+	pos: usize,
+}
+
+impl Extractor {
+	fn new(mt: Matcher, code: String) -> Extractor {
+		Extractor{ mt, code, lines: vec![ String::from("") ], pos: 0 }
 	}
 
-	fn get_task(&self, code: String) -> Option<Task> {
-		if !code.contains(&self.target) {
+	fn get_task(&mut self) -> Option<Task> {
+		if !self.code.contains(&self.mt.target) {
 			return None;
 		}
-		let target_len = self.target.chars().count();
 
-		let mut idx = 0;
-		let mut comment_pattern = String::from("");
-		let lines: Vec<&str> = code.split("\n").collect();
-		while idx < lines.len() {
-			let line = lines.get(idx).expect("There should be a line there");
-			idx += 1;
-			if !line.contains(&self.target) {
-				continue;
-			}
-
-			let byte_pos = line.find(&self.target)
-				.expect("Unable to find byte position of the first match");
-			let before = (&line[0..byte_pos]).trim();
-			let after = (&line[byte_pos+target_len..]).trim();
-			let source = TaskSource{
-				kind: match &self.kind {
-					TaskType::TODO => TaskType::TODO,
-					TaskType::FIXME => TaskType::FIXME,
-					TaskType::Custom(n) => TaskType::Custom(n.to_string()),
-				},
-				line: idx,
-				column: byte_pos as usize,
-			};
-
-			if comment_pattern.len() == 0 {
-				comment_pattern = self.determine_comment_pattern(&before);
-			}
-			let name = self.determine_task_name(&after);
-			let severity = self.determine_severity(&after);
-
-			let task = Task{
-				source,
-				name,
-				severity,
-			};
-
-			if idx == lines.len() - 1 {
-				break;
-			}
-
-			let nextLine = lines.get(idx).expect("There should be a next line");
-			let mut context = vec![];
-			if comment_pattern == nextLine.trim() {
-				// Hit empty comment line: context delimiter.
-				// Pick up everything until the end of the comment.
-				let mut ctxLine = idx + 1;
-				while ctxLine < lines.len() {
-					let raw = lines.get(ctxLine).expect("context line").trim();
-					let sans = raw.trim_start_matches(&comment_pattern);
-					if raw.len() == sans.len() {
-						break;
-					}
-					context.push(sans.trim());
-					ctxLine += 1;
-				}
-				idx += ctxLine;
-			}
-			dbg!(&task);
-			dbg!(context);
-			
-		};
+		let lines: Vec<&str> = self.code.split("\n").collect();
+		for line in lines {
+			self.lines.push(line.to_string());
+		}
+		while self.pos < self.lines.len() {
+			self.process_line();
+			self.pos += 1;
+		}
 		None
 	}
 
-	fn determine_comment_pattern(&self, line: &str) -> String {
-		let mut count = line.len();
-		let mut ptn = String::from("");
-		while count > 0 {
-			count -= 1;
-			let c = &line[count..count+1];
-			if c == self.prefix {
-				while &line[count-1..count] == " " {
-					count -= 1;
-				}
-				continue;
-			}
-			if ptn.len() >= 1 && c.trim().len() < 1 {
-				break;
-			}
-			ptn += c;
+	fn process_line(&mut self) {
+		let line = self.lines.get(self.pos)
+			.expect("There should be a line there");
+		if !line.contains(&self.mt.target) {
+			return;
 		}
-		return String::from(ptn);
-	}	
+
+		let target_len = self.mt.target.chars().count();
+		let byte_pos = line.find(&self.mt.target)
+			.expect("Unable to find byte position of the first match");
+		let before = (&line[0..byte_pos]).trim();
+		let after = (&line[byte_pos+target_len..]).trim();
+		let source = TaskSource{
+			kind: self.mt.kind.clone(),
+			line: self.pos,
+			column: byte_pos as usize,
+		};
+
+		let name = self.determine_task_name(&after);
+		let severity = self.determine_severity(&after);
+
+		let task = Task{
+			source,
+			name,
+			severity,
+		};
+
+		if self.pos == self.lines.len() - 1 {
+			return;
+		}
+
+		dbg!(&task);
+		dbg!(self.process_context());
+	}
+
+	fn process_context(&mut self) -> Vec<&str> {
+		let nextLine = self.lines.get(self.pos+1)
+			.expect("There should be a next line");
+		let mut context = vec![];
+		if self.mt.comment_pattern == nextLine.trim() {
+			// Hit empty comment line: context delimiter.
+			// Pick up everything until the end of the comment.
+			self.pos += 2; // consume the delimiter line, start at line after.
+			while self.pos < self.lines.len() {
+				let raw = self.lines.get(self.pos).expect("context line").trim();
+				let sans = raw.trim_start_matches(&self.mt.comment_pattern);
+				if raw.len() == sans.len() {
+					break;
+				}
+				context.push(sans.trim());
+				self.pos += 1;
+			}
+			// self.pos += ctxLine;
+		}
+		return context
+	}
 
 	fn determine_task_name(&self, line: &str) -> String {
 		let mut idx = 0;
 		while idx < line.len() {
 			let c = &line[idx..idx+1];
-			if c != self.situational && c != " " && c != self.severity {
+			if c != self.mt.situational && c != " " && c != self.mt.severity {
 				break;
 			}
 			idx += 1;
@@ -152,7 +150,7 @@ impl Matcher {
 	}
 
 	fn determine_severity(&self, line: &str) -> TaskSeverity {
-		let nosvt = &line.trim_start_matches("!");
+		let nosvt = &line.trim_start_matches(&self.mt.severity);
 		match line.len() - nosvt.len() {
 			0 => TaskSeverity::NORMAL,
 			1 => TaskSeverity::HIGH,
@@ -164,8 +162,9 @@ impl Matcher {
 
 fn main() {
 	let m = Matcher::new(TaskType::TODO);
+	let mut ext = Extractor::new(m, CODE.to_string());
 	loop {
-		let task = match m.get_task(CODE.to_string()) {
+		let task = match ext.get_task() {
 			Some(t) => t,
 			None => break,
 		};
