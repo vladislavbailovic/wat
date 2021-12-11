@@ -1,44 +1,11 @@
 mod mock;
 use mock::CODE;
+mod task;
 
-#[derive(Debug, Clone)]
-enum TaskType {
-	TODO,
-	FIXME,
-	Custom(String)
-}
-
-#[derive(Debug)]
-enum TaskSeverity {
-	URGENT,
-	HIGH,
-	NORMAL,
-	Custom(i8),
-}
-
-#[derive(Debug)]
-struct Task {
-    name: String,
-	source: TaskSource,
-	severity: TaskSeverity,
-    context: Option<TaskContext>,
-}
-
-#[derive(Debug)]
-struct TaskContext {
-    body: Vec<String>,
-}
-
-#[derive(Debug)]
-struct TaskSource {
-	kind: TaskType,
-	line: usize,
-	column: usize,
-}
 
 #[derive(Debug)]
 struct Matcher {
-	kind: TaskType,
+	kind: task::Type,
 	target: String,
 	situational: String,
 	severity: String,
@@ -46,14 +13,14 @@ struct Matcher {
 }
 
 impl Matcher {
-	fn new(kind: TaskType) -> Matcher {
+	fn new(kind: task::Type) -> Matcher {
 		let situational = String::from(":");
 		let severity = String::from("!");
 		let comment_pattern = String::from("//");
 		let target = match &kind {
-			TaskType::TODO => "TODO".to_string(),
-			TaskType::FIXME => "FIXME".to_string(),
-			TaskType::Custom(tgt) => tgt.to_string(),
+			task::Type::TODO => "TODO".to_string(),
+			task::Type::FIXME => "FIXME".to_string(),
+			task::Type::Custom(tgt) => tgt.to_string(),
 		};
 		return Matcher{ kind, target, severity, situational, comment_pattern };
 	}
@@ -76,7 +43,7 @@ impl Extractor {
 		Extractor{ mt, code, lines, pos: 0 }
 	}
 
-	fn get_task(&mut self) -> Option<Task> {
+	fn get_task(&mut self) -> Option<task::Task> {
 		if !self.code.contains(&self.mt.target) {
 			return None;
 		}
@@ -92,7 +59,7 @@ impl Extractor {
         None
 	}
 
-	fn process_line(&mut self) -> Option<Task> {
+	fn process_line(&mut self) -> Option<task::Task> {
 		let line = self.lines.get(self.pos)
 			.expect("There should be a line there");
 		if !line.contains(&self.mt.target) {
@@ -103,7 +70,7 @@ impl Extractor {
 		let byte_pos = line.find(&self.mt.target)
 			.expect("Unable to find byte position of the first match");
 		let after = (&line[byte_pos+target_len..]).trim();
-		let source = TaskSource{
+		let source = task::TaskSource{
 			kind: self.mt.kind.clone(),
 			line: self.pos,
 			column: byte_pos as usize,
@@ -112,7 +79,7 @@ impl Extractor {
 		let name = self.determine_task_name(&after);
 		let severity = self.determine_severity(&after);
 
-		let task = Task{
+		let task = task::Task{
 			source, name, severity,
             context: self.process_context(),
 		};
@@ -120,7 +87,7 @@ impl Extractor {
         Some(task)
 	}
 
-	fn process_context(&mut self) -> Option<TaskContext> {
+	fn process_context(&mut self) -> Option<task::Context> {
 		let next_line = self.lines.get(self.pos+1)
 			.expect("There should be a next line");
 		let mut context: Vec<String> = vec![];
@@ -138,7 +105,7 @@ impl Extractor {
 				self.pos += 1;
 			}
 		} else { return None; }
-		Some(TaskContext{ body: context })
+		Some(task::Context{ body: context })
 	}
 
 	fn determine_task_name(&self, line: &str) -> String {
@@ -153,19 +120,14 @@ impl Extractor {
 		return String::from(&line[idx..]);
 	}
 
-	fn determine_severity(&self, line: &str) -> TaskSeverity {
+	fn determine_severity(&self, line: &str) -> task::Severity {
 		let nosvt = &line.trim_start_matches(&self.mt.severity);
-		match line.len() - nosvt.len() {
-			0 => TaskSeverity::NORMAL,
-			1 => TaskSeverity::HIGH,
-			2 => TaskSeverity::URGENT,
-			n => TaskSeverity::Custom(n as i8),
-		}
+        task::Severity::new(line.len() - nosvt.len())
 	}
 }
 
 fn main() {
-	let m = Matcher::new(TaskType::TODO);
+	let m = Matcher::new(task::Type::TODO);
 	let mut ext = Extractor::new(m, CODE.to_string());
 	loop {
 		let task = match ext.get_task() {
