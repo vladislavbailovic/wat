@@ -16,13 +16,10 @@ fn main() {
         println!("Task {:?}({:?}): {}",
             &task.source.kind, &task.severity, &task.name);
         println!("[Found on {}:{}]", &task.source.line, &task.source.column);
-        let ctx = match task.context {
-            Some(ctx) => ctx.body,
-            None => vec![],
+        match task.context {
+            Some(ctx) => println!("{}", ctx.body()),
+            None => (),
         };
-        for ln in ctx {
-            println!("{}", ln);
-        }
         println!("--------------------\n");
 	}
 }

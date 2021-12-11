@@ -11,15 +11,13 @@ pub struct Matcher {
 
 impl Matcher {
 	pub fn new(kind: task::Type) -> Matcher {
-		let situational = String::from(":");
-		let severity = String::from("!");
-		let comment_pattern = String::from("//");
-		let target = match &kind {
-			task::Type::TODO => "TODO".to_string(),
-			task::Type::FIXME => "FIXME".to_string(),
-			task::Type::Custom(tgt) => tgt.to_string(),
-		};
-		return Matcher{ kind, target, severity, situational, comment_pattern };
+		Matcher{
+            kind: kind.clone(),
+            target: task::Type::target(&kind),
+            severity: String::from("!"),
+            situational: String::from(":"),
+            comment_pattern: String::from("//"),
+        }
 	}
 }
 
@@ -67,7 +65,7 @@ impl Extractor {
 		let byte_pos = line.find(&self.mt.target)
 			.expect("Unable to find byte position of the first match");
 		let after = (&line[byte_pos+target_len..]).trim();
-		let source = task::TaskSource{
+		let source = task::Source{
 			kind: self.mt.kind.clone(),
 			line: self.pos,
 			column: byte_pos as usize,
@@ -102,7 +100,7 @@ impl Extractor {
 				self.pos += 1;
 			}
 		} else { return None; }
-		Some(task::Context{ body: context })
+		Some(task::Context::new(context))
 	}
 
 	fn determine_task_name(&self, line: &str) -> String {
