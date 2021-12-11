@@ -2,14 +2,22 @@
 enum TaskType {
 	TODO,
 	FIXME,
-
 	Custom(String)
+}
+
+#[derive(Debug)]
+enum TaskSeverity {
+	URGENT,
+	HIGH,
+	NORMAL,
+	Custom(i8),
 }
 
 #[derive(Debug)]
 struct Task {
     name: String,
 	source: TaskSource,
+	severity: TaskSeverity,
 }
 
 #[derive(Debug)]
@@ -25,14 +33,14 @@ struct Matcher {
 	target: String,
 	prefix: String,
 	situational: String,
-	severity: char,
+	severity: String,
 }
 
 impl Matcher {
 	fn new(kind: TaskType) -> Matcher {
 		let prefix = String::from("@");
 		let situational = String::from(":");
-		let severity = '!';
+		let severity = String::from("!");
 		let target = match &kind {
 			TaskType::TODO => "TODO".to_string(),
 			TaskType::FIXME => "FIXME".to_string(),
@@ -45,8 +53,9 @@ impl Matcher {
 		if !code.contains(&self.target) {
 			return None;
 		}
-		let mut idx = -1;
 		let target_len = self.target.chars().count();
+
+		let mut idx = -1;
 		let mut comment_pattern = String::from("");
 		for line in code.split("\n") {
 			idx += 1;
@@ -72,11 +81,12 @@ impl Matcher {
 				comment_pattern = self.determine_comment_pattern(&before);
 			}
 			let name = self.determine_task_name(&after);
-			// let severity = self.determineSeverity(&before);
+			let severity = self.determine_severity(&after);
 
 			let task = Task{
 				source,
 				name,
+				severity,
 			};
 			dbg!(&task);
 			
@@ -108,12 +118,22 @@ impl Matcher {
 		let mut idx = 0;
 		while idx < line.len() {
 			let c = &line[idx..idx+1];
-			if c != self.situational && c != " " {
+			if c != self.situational && c != " " && c != self.severity {
 				break;
 			}
 			idx += 1;
 		}
 		return String::from(&line[idx..]);
+	}
+
+	fn determine_severity(&self, line: &str) -> TaskSeverity {
+		let nosvt = &line.trim_start_matches("!");
+		match line.len() - nosvt.len() {
+			0 => TaskSeverity::NORMAL,
+			1 => TaskSeverity::HIGH,
+			2 => TaskSeverity::URGENT,
+			n => TaskSeverity::Custom(n as i8),
+		}
 	}
 }
 
@@ -156,7 +176,7 @@ module.exports = context => {
                 getSites() {
                         // @TODO remove stub!
                         return Promise.resolve(
-                                [ 'body-exposure' ]
+                                [ 'body-exposure' ] // TODO!! don't hardcode
                         );
 						// TODO: use this instead
                         return new Promise( ( resolve, reject ) => {
