@@ -18,7 +18,7 @@ impl formatter::Formats for Formatter {
             &task.severity,
             &task.name).to_string();
 
-        out += &format!("[Found on {}:{}]",
+        out += &format!("[Found on {}:{}]\n",
             &task.source.line,
             &task.source.column).to_string();
 
@@ -29,10 +29,16 @@ impl formatter::Formats for Formatter {
 
         return out;
     }
-    fn get_delimiter(&self, delimiter: formatter::Delimiter) -> String {
-        match delimiter {
-            formatter::Delimiter::TASK => String::from("--------------------\n"),
-            formatter::Delimiter::SECTION => String::from("===\n"),
+    fn get_delimiter(&self, delim: formatter::Delimiter, point: formatter::Point) -> String {
+        match delim {
+            formatter::Delimiter::TASK => match point {
+                formatter::Point::END => String::from("--------------------\n"),
+                _ => String::from(""),
+            },
+            formatter::Delimiter::SECTION => match point {
+                formatter::Point::START => String::from("==="),
+                formatter::Point::END => String::from("===\n"),
+            }
         }
     }
 }

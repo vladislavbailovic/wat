@@ -3,20 +3,20 @@ use task;
 
 pub trait Renders {
     fn render(&self, task: task::Task);
-    fn delimiter(&self, delimiter: Delimiter);
+    fn delimiter(&self, delimiter: Delimiter, point: Point);
 }
 
 pub trait Formats {
     fn formatted(&self, task: task::Task) -> String;
-    fn get_delimiter(&self, delimiter: Delimiter) -> String;
+    fn get_delimiter(&self, delimiter: Delimiter, point: Point) -> String;
 }
 
 impl<T> Renders for T where T: Formats {
     fn render(&self, task: task::Task) {
         println!("{}", &self.formatted(task));
     }
-    fn delimiter(&self, delimiter: Delimiter) {
-        println!("{}", &self.get_delimiter(delimiter));
+    fn delimiter(&self, delimiter: Delimiter, point: Point) {
+        println!("{}", &self.get_delimiter(delimiter, point));
     }
 }
 
@@ -35,4 +35,9 @@ impl Format {
 pub enum Delimiter {
     TASK,
     SECTION,
+}
+
+pub enum Point {
+    START,
+    END,
 }
