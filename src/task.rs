@@ -6,6 +6,20 @@ pub enum Type {
 }
 
 impl Type {
+    pub fn list() -> Vec<Type> {
+        return vec!( Type::TODO, Type::FIXME );
+    }
+    pub fn list_with_additional(custom: Option<Vec<String>>) -> Vec<Type> {
+        let mut res = Type::list();
+        let custom = match custom {
+            Some(kinds) => kinds,
+            None => vec![],
+        };
+        for additional in custom {
+            res.push(Type::Custom(additional));
+        }
+        return res;
+    }
     pub fn target(kind: &Type) -> String {
         return match kind {
             Type::TODO => String::from("TODO"),
