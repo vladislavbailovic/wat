@@ -6,23 +6,23 @@ mod formatter;
 
 fn main() {
     let additional_types = vec![String::from("custom")];
-    let f = formatter::Format::new(formatter::Format::HTML);
+    let f = formatter::Format::new(formatter::Format::TEXT);
     for kind in task::Type::list_with_additional(Some(additional_types)) {
-        println!("Finding {}", task::Type::target(&kind));
-        f.delimiter(formatter::Delimiter::SECTION, formatter::Point::START);
+        f.start_section(task::Type::target(&kind));
 
         let m = pattern::Matcher::new(kind);
         let mut ext = pattern::Extractor::new(m, CODE.to_string());
 
         loop {
-            f.delimiter(formatter::Delimiter::TASK, formatter::Point::START);
-            let task = match ext.get_task() {
-                Some(t) => t,
+            match ext.get_task() {
+                Some(task) => {
+                    f.delimiter(formatter::Delimiter::TASK, formatter::Point::START);
+                    f.render(task);
+                    f.delimiter(formatter::Delimiter::TASK, formatter::Point::END);
+                },
                 None => break,
             };
-            f.render(task);
-            f.delimiter(formatter::Delimiter::TASK, formatter::Point::END);
         }
-        f.delimiter(formatter::Delimiter::SECTION, formatter::Point::END);
+        f.end_section();
     }
 }

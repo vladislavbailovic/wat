@@ -32,13 +32,15 @@ impl formatter::Formats for Formatter {
     fn get_delimiter(&self, delim: formatter::Delimiter, point: formatter::Point) -> String {
         match delim {
             formatter::Delimiter::TASK => match point {
-                formatter::Point::END => String::from("--------------------\n"),
+                formatter::Point::END => String::from("\n"),
                 _ => String::from(""),
             },
             formatter::Delimiter::SECTION => match point {
-                formatter::Point::START => String::from("==="),
-                formatter::Point::END => String::from("===\n"),
+                _ => String::from(""),
             }
         }
+    }
+    fn get_title(&self, title: String) -> String {
+        String::from("")
     }
 }

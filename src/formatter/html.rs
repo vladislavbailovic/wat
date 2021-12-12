@@ -43,13 +43,16 @@ impl formatter::Formats for Formatter {
     fn get_delimiter(&self, delim: formatter::Delimiter, point: formatter::Point) -> String {
         match delim {
             formatter::Delimiter::TASK => match point {
-                formatter::Point::START => String::from("<article>\n"),
-                formatter::Point::END => String::from("</article>\n"),
+                formatter::Point::START => String::from("<article>"),
+                formatter::Point::END => String::from("</article>"),
             },
             formatter::Delimiter::SECTION => match point {
-                formatter::Point::START => String::from("<section>\n"),
-                formatter::Point::END => String::from("</section>\n"),
+                formatter::Point::START => String::from("<section>"),
+                formatter::Point::END => String::from("</section>"),
             },
         }
+    }
+    fn get_title(&self, title: String) -> String {
+        format!("<h1>{}</h1>", &title)
     }
 }
