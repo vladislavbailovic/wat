@@ -2,26 +2,37 @@ mod text;
 use task;
 
 pub trait Renders {
-    fn render(&self);
+    fn render(&self, task: task::Task);
+    fn delimiter(&self, delimiter: Delimiter);
 }
 
 pub trait Formats {
-    fn formatted(&self) -> String;
+    fn formatted(&self, task: task::Task) -> String;
+    fn get_delimiter(&self, delimiter: Delimiter) -> String;
 }
 
 impl<T> Renders for T where T: Formats {
-    fn render(&self) {
-        println!("{}", &self.formatted());
+    fn render(&self, task: task::Task) {
+        println!("{}", &self.formatted(task));
+    }
+    fn delimiter(&self, delimiter: Delimiter) {
+        println!("{}", &self.get_delimiter(delimiter));
     }
 }
 
 pub enum Format {
     TEXT,
 }
+
 impl Format {
-    pub fn new(kind: Format, task: task::Task) -> Box<dyn Renders> {
+    pub fn new(kind: Format) -> Box<dyn Renders> {
         match kind {
-            _ => Box::new(text::Formatter::new(task)),
+            _ => Box::new(text::Formatter::new()),
         }
     }
+}
+
+pub enum Delimiter {
+    TASK,
+    SECTION,
 }

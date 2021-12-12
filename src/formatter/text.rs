@@ -1,34 +1,38 @@
 use task;
 use formatter;
 
-pub struct Formatter {
-    task: task::Task
-}
+pub struct Formatter {}
 
 impl Formatter {
-    pub fn new(task: task::Task) -> Formatter {
-        return Formatter{ task }
+    pub fn new() -> Formatter {
+        return Formatter{ }
     }
 }
 
 impl formatter::Formats for Formatter {
-    fn formatted(&self) -> String {
+    fn formatted(&self, task: task::Task) -> String {
         let mut out = String::from("");
 
         out += &format!("Task {:?} ({:?}): {}\n",
-            &self.task.source.kind,
-            &self.task.severity,
-            &self.task.name).to_string();
+            &task.source.kind,
+            &task.severity,
+            &task.name).to_string();
 
         out += &format!("[Found on {}:{}]",
-            &self.task.source.line,
-            &self.task.source.column).to_string();
+            &task.source.line,
+            &task.source.column).to_string();
 
-        out += &match &self.task.context {
+        out += &match &task.context {
             Some(ctx) => format!("{}", &ctx.body()),
             None => String::from(""),
         };
 
         return out;
+    }
+    fn get_delimiter(&self, delimiter: formatter::Delimiter) -> String {
+        match delimiter {
+            formatter::Delimiter::TASK => String::from("--------------------\n"),
+            formatter::Delimiter::SECTION => String::from("===\n"),
+        }
     }
 }

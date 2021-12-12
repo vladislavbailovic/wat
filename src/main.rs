@@ -6,6 +6,7 @@ mod formatter;
 
 fn main() {
     let additional_types = vec![String::from("custom")];
+    let f = formatter::Format::new(formatter::Format::TEXT);
     for kind in task::Type::list_with_additional(Some(additional_types)) {
         println!("Finding {}", task::Type::target(&kind));
         let m = pattern::Matcher::new(kind);
@@ -15,10 +16,9 @@ fn main() {
                 Some(t) => t,
                 None => break,
             };
-            let f = formatter::Format::new(formatter::Format::TEXT, task);
-            f.render();
-            println!("--------------------\n");
+            f.render(task);
+            f.delimiter(formatter::Delimiter::TASK);
         }
-        println!("====================\n");
+        f.delimiter(formatter::Delimiter::SECTION);
     }
 }
