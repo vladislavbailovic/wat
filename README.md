@@ -11,6 +11,10 @@ WAT - source code inline tasks analysis tool
 - [ ] CLI arguments for:
 	- [ ] Output format
 	- [ ] Force matchers format
+	- [ ] Filter for severity
+	- [ ] Filter for task type
+	- [ ] Custom task type
+	- [ ] Additional context
 - [ ] Allow actions to run on internal task representation
 - [ ] Allow for configurable task triggering words
 
