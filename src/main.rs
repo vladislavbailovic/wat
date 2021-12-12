@@ -2,6 +2,7 @@ mod mock;
 use mock::CODE;
 mod pattern;
 mod task;
+mod formatter;
 
 fn main() {
     let additional_types = vec![String::from("custom")];
@@ -14,16 +15,9 @@ fn main() {
                 Some(t) => t,
                 None => break,
             };
-            println!(
-                "\tTask {:?}({:?}): {}",
-                &task.source.kind, &task.severity, &task.name
-            );
-            println!("\t[Found on {}:{}]", &task.source.line, &task.source.column);
-            match task.context {
-                Some(ctx) => println!("\t{}", ctx.body()),
-                None => (),
-            };
-            println!("\t--------------------\n");
+            let f = formatter::Format::new(formatter::Format::TEXT, task);
+            f.render();
+            println!("--------------------\n");
         }
         println!("====================\n");
     }
