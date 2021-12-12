@@ -1,4 +1,5 @@
 mod text;
+mod html;
 use task;
 
 pub trait Renders {
@@ -28,12 +29,14 @@ impl<T> Renders for T where T: Formats {
 
 pub enum Format {
     TEXT,
+    HTML,
 }
 
 impl Format {
     pub fn new(kind: Format) -> Box<dyn Renders> {
         match kind {
-            _ => Box::new(text::Formatter::new()),
+            Format::TEXT => Box::new(text::Formatter::new()),
+            Format::HTML => Box::new(html::Formatter::new()),
         }
     }
 }

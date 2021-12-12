@@ -6,7 +6,7 @@ mod formatter;
 
 fn main() {
     let additional_types = vec![String::from("custom")];
-    let f = formatter::Format::new(formatter::Format::TEXT);
+    let f = formatter::Format::new(formatter::Format::HTML);
     for kind in task::Type::list_with_additional(Some(additional_types)) {
         println!("Finding {}", task::Type::target(&kind));
         f.delimiter(formatter::Delimiter::SECTION, formatter::Point::START);
