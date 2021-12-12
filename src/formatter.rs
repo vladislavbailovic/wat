@@ -13,10 +13,16 @@ pub trait Formats {
 
 impl<T> Renders for T where T: Formats {
     fn render(&self, task: task::Task) {
-        println!("{}", &self.formatted(task));
+        let out = self.formatted(task);
+        if out.len() > 0 {
+            println!("{}", &out);
+        }
     }
     fn delimiter(&self, delimiter: Delimiter, point: Point) {
-        println!("{}", &self.get_delimiter(delimiter, point));
+        let out = self.get_delimiter(delimiter, point);
+        if out.len() > 0 {
+            println!("{}", &out);
+        }
     }
 }
 

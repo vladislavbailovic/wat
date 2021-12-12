@@ -18,12 +18,12 @@ impl formatter::Formats for Formatter {
             &task.severity,
             &task.name).to_string();
 
-        out += &format!("[Found on {}:{}]\n",
+        out += &format!("[Found on {}:{}]",
             &task.source.line,
             &task.source.column).to_string();
 
         out += &match &task.context {
-            Some(ctx) => format!("{}", &ctx.body()),
+            Some(ctx) => format!("\n{}", &ctx.body()),
             None => String::from(""),
         };
 
