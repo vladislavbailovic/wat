@@ -18,6 +18,16 @@ WAT - source code inline tasks analysis tool
 - [ ] Allow actions to run on internal task representation
 - [ ] Allow for configurable task triggering words
 
+
+Quick Start
+-----------
+
+```
+rustc ./src/main.rs -o wat
+./wat
+```
+
+
 Source task comment
 -------------------
 
