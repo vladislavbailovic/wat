@@ -79,13 +79,22 @@ impl Extractor {
         Some(task)
     }
 
+    fn is_context_delimiter(&self, next_line: &str) -> bool {
+        if self.comment_pattern == next_line.trim() {
+            return true;
+        }
+        return next_line.contains(&self.comment_pattern) &&
+            next_line.contains(parser::CONTEXT_DELIMITER);
+    }
+
     fn process_context(&mut self) -> Option<task::Context> {
         let next_line = self
             .lines
             .get(self.pos + 1)
             .expect("There should be a next line");
         let mut context: Vec<String> = vec![];
-        if self.comment_pattern == next_line.trim() {
+        if self.is_context_delimiter(next_line) {
+        // if self.comment_pattern == next_line.trim() {
             // Hit empty comment line: context delimiter.
             // Pick up everything until the end of the comment.
             self.pos += 2; // consume the delimiter line, start at line after.

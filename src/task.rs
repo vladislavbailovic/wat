@@ -1,4 +1,4 @@
-use parser::Target;
+use parser::{self,Target};
 
 const TODO: &str = "TODO";
 const FIXME: &str = "FIXME";
@@ -87,7 +87,7 @@ impl Context {
         let mut body: Vec<String> = vec![String::from("")];
         let mut idx = 0;
         for line in &self.raw {
-            if "" == line.trim() {
+            if "" == line.trim() || line.contains(parser::CONTEXT_DELIMITER) {
                 body.push(String::from(""));
                 idx += 1;
                 continue;

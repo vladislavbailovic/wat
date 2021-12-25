@@ -13,7 +13,7 @@ module.exports = context => {
 			 // 
 			 // Idk a comment of some sort goes here.
 			 // Whatever, man.
-			 // 
+			 // ---
 			 // Another paragraph.
 			static RQ_LIST_SITES = 'getSites';
 			static RQ_GET_SITE = 'getSiteInfo';

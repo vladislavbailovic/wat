@@ -1,5 +1,6 @@
 pub const SEVERITY: &str = "!";
 pub const SITUATIONAL: &str = ":";
+pub const CONTEXT_DELIMITER: &str = "---";
 
 pub trait Target {
     fn target(&self) -> String;
