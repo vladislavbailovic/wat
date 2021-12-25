@@ -8,7 +8,7 @@ fn main() {
     let additional_types = vec![String::from("custom")];
     let f = formatter::Format::new(formatter::Format::TEXT);
     for kind in task::Type::list_with_additional(Some(additional_types)) {
-        f.start_section(task::Type::target(&kind));
+        f.start_section(kind.target());
 
         let m = pattern::Matcher::new(kind);
         let mut ext = pattern::Extractor::new(m, CODE.to_string());

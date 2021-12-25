@@ -9,6 +9,7 @@ impl Type {
     pub fn list() -> Vec<Type> {
         return vec!( Type::TODO, Type::FIXME );
     }
+
     pub fn list_with_additional(custom: Option<Vec<String>>) -> Vec<Type> {
         let mut res = Type::list();
         let custom = match custom {
@@ -20,12 +21,21 @@ impl Type {
         }
         return res;
     }
-    pub fn target(kind: &Type) -> String {
-        return match kind {
+
+    pub fn kind(target: &str) -> Type {
+        match target{
+            "TODO" => Type::TODO,
+            "FIXME" => Type::FIXME,
+            kind => Type::Custom(kind.to_string()),
+        }
+    }
+
+    pub fn target(&self) -> String {
+        match self {
             Type::TODO => String::from("TODO"),
             Type::FIXME => String::from("FIXME"),
             Type::Custom(tgt) => tgt.to_string(),
-        };
+        }
     }
 }
 

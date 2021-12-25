@@ -1,19 +1,10 @@
 use task;
 
-#[derive(Debug)]
-pub enum MatcherType {
-    Comment(String),
-    Situational(String),
-    Severity(String),
-    Target(String),
-}
-
 const SEVERITY: &str = "!";
 const SITUATIONAL: &str = ":";
 
 #[derive(Debug)]
 pub struct Matcher {
-    kind: task::Type,
     target: String,
     comment_pattern: String,
 }
@@ -21,8 +12,7 @@ pub struct Matcher {
 impl Matcher {
     pub fn new(kind: task::Type) -> Matcher {
         Matcher {
-            kind: kind.clone(),
-            target: task::Type::target(&kind),
+            target: kind.target(),
             comment_pattern: String::from("//"),
         }
     }
@@ -81,7 +71,7 @@ impl Extractor {
             .expect("Unable to find byte position of the first match");
         let after = (&line[byte_pos + target_len..]).trim();
         let source = task::Source {
-            kind: self.mt.kind.clone(),
+            kind: task::Type::kind(&self.mt.target),
             line: self.pos,
             column: byte_pos as usize,
         };
