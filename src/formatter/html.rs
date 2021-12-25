@@ -20,6 +20,7 @@ impl formatter::Formats for Formatter {
             + &format!("\t\t\t<dt>Severity<dt><dd>{:?}</dd>\n", &task.severity)
             + &String::from("\t\t</dl>\n")
             + &String::from("\t\t<dl>\n")
+            + &format!("\t\t\t<dt>File<dt><dd><code>{:?}</code></dd>\n", &task.source.path)
             + &format!("\t\t\t<dt>Line<dt><dd>{:?}</dd>\n", &task.source.line)
             + &format!("\t\t\t<dt>Char<dt><dd>{:?}</dd>\n", &task.source.column)
             + &String::from("\t\t</dl>\n")

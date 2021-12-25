@@ -101,6 +101,7 @@ impl Context {
 #[derive(Debug)]
 pub struct Source {
     pub kind: Type,
+    pub path: String,
     pub line: usize,
     pub column: usize,
 }

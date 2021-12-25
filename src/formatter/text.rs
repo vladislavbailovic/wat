@@ -19,7 +19,11 @@ impl formatter::Formats for Formatter {
         )
         .to_string();
 
-        out += &format!("[Found on {}:{}]", &task.source.line, &task.source.column).to_string();
+        out += &format!("[Found on {}:{}:{}]",
+                        &task.source.path,
+            &task.source.line,
+            &task.source.column
+        ).to_string();
 
         out += &match &task.context {
             Some(ctx) => format!("\n{}", &ctx.body()),

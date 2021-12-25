@@ -6,6 +6,8 @@ WAT - source code inline tasks analysis tool
 - [X] Process them into internal task representation
 - [X] Determine the source comment format (matchers heuristic)
 - [X] Go through source code
+- [X] Add file path to location info
+- [ ] Specify context sections
 - [ ] Introduce output streams for renderables
 - [ ] Implement buffered output
 - [ ] CLI arguments for:
@@ -17,6 +19,7 @@ WAT - source code inline tasks analysis tool
 	- [ ] Additional context
 - [ ] Allow actions to run on internal task representation
 - [ ] Allow for configurable task triggering words
+- [ ] Multiline comments
 
 
 Quick Start

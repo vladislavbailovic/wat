@@ -13,8 +13,7 @@ fn main() {
             f.start_section(kind.target());
 
             let comment = parser::CommentStyle::from_file(&item.kind);
-            let code = files::read(&item.path);
-            let mut ext = pattern::Extractor::new(&kind, &comment, code);
+            let mut ext = pattern::Extractor::new(&kind, &comment, &item.path);
 
             loop {
                 match ext.get_task() {

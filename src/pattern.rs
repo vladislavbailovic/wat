@@ -1,7 +1,9 @@
 use parser::{self, Target};
+use files;
 use task;
 
 pub struct Extractor {
+    source: String,
     target: String,
     comment_pattern: String,
     code: String,
@@ -10,7 +12,8 @@ pub struct Extractor {
 }
 
 impl Extractor {
-    pub fn new(kind: &dyn Target, comment: &dyn Target, code: String) -> Extractor {
+    pub fn new(kind: &dyn Target, comment: &dyn Target, source: &str) -> Extractor {
+        let code = files::read(source);
         let mut lines: Vec<String> = vec![];
         let raw: Vec<&str> = code.split("\n").collect();
         for line in raw {
@@ -19,6 +22,7 @@ impl Extractor {
         Extractor {
             target: kind.target(),
             comment_pattern: comment.target(),
+            source: source.to_string(),
             code,
             lines,
             pos: 0,
@@ -57,6 +61,7 @@ impl Extractor {
         let after = (&line[byte_pos + target_len..]).trim();
         let source = task::Source {
             kind: task::Type::kind(&self.target),
+            path: self.source.as_str().to_string(),
             line: self.pos,
             column: byte_pos as usize,
         };
