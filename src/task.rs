@@ -1,3 +1,5 @@
+use parser::Target;
+
 #[derive(Debug, Clone)]
 pub enum Type {
     TODO,
@@ -29,8 +31,10 @@ impl Type {
             kind => Type::Custom(kind.to_string()),
         }
     }
+}
 
-    pub fn target(&self) -> String {
+impl Target for Type {
+    fn target(&self) -> String {
         match self {
             Type::TODO => String::from("TODO"),
             Type::FIXME => String::from("FIXME"),

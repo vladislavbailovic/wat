@@ -1,17 +1,20 @@
 mod mock;
 use mock::CODE;
+mod parser;
 mod pattern;
 mod task;
 mod formatter;
 
+use parser::Target;
+
 fn main() {
     let additional_types = vec![String::from("custom")];
     let f = formatter::Format::new(formatter::Format::TEXT);
+    let comment = parser::CommentStyle::Slc;
     for kind in task::Type::list_with_additional(Some(additional_types)) {
         f.start_section(kind.target());
 
-        let m = pattern::Matcher::new(kind);
-        let mut ext = pattern::Extractor::new(m, CODE.to_string());
+        let mut ext = pattern::Extractor::new(&kind, &comment, CODE.to_string());
 
         loop {
             match ext.get_task() {

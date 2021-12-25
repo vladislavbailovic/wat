@@ -1,39 +1,24 @@
 use task;
-
-const SEVERITY: &str = "!";
-const SITUATIONAL: &str = ":";
-
-#[derive(Debug)]
-pub struct Matcher {
-    target: String,
-    comment_pattern: String,
-}
-
-impl Matcher {
-    pub fn new(kind: task::Type) -> Matcher {
-        Matcher {
-            target: kind.target(),
-            comment_pattern: String::from("//"),
-        }
-    }
-}
+use parser::{self, Target};
 
 pub struct Extractor {
-    mt: Matcher,
+    target: String,
+    comment_pattern: String,
     code: String,
     lines: Vec<String>,
     pos: usize,
 }
 
 impl Extractor {
-    pub fn new(mt: Matcher, code: String) -> Extractor {
+    pub fn new(kind: &dyn Target, comment: &dyn Target, code: String) -> Extractor {
         let mut lines: Vec<String> = vec![];
         let raw: Vec<&str> = code.split("\n").collect();
         for line in raw {
             lines.push(line.to_string());
         }
         Extractor {
-            mt,
+            target: kind.target(),
+            comment_pattern: comment.target(),
             code,
             lines,
             pos: 0,
@@ -41,7 +26,7 @@ impl Extractor {
     }
 
     pub fn get_task(&mut self) -> Option<task::Task> {
-        if !self.code.contains(&self.mt.target) {
+        if !self.code.contains(&self.target) {
             return None;
         }
 
@@ -61,17 +46,17 @@ impl Extractor {
             .lines
             .get(self.pos)
             .expect("There should be a line there");
-        if !line.contains(&self.mt.target) {
+        if !line.contains(&self.target) {
             return None;
         }
 
-        let target_len = self.mt.target.chars().count();
+        let target_len = self.target.chars().count();
         let byte_pos = line
-            .find(&self.mt.target)
+            .find(&self.target)
             .expect("Unable to find byte position of the first match");
         let after = (&line[byte_pos + target_len..]).trim();
         let source = task::Source {
-            kind: task::Type::kind(&self.mt.target),
+            kind: task::Type::kind(&self.target),
             line: self.pos,
             column: byte_pos as usize,
         };
@@ -95,13 +80,13 @@ impl Extractor {
             .get(self.pos + 1)
             .expect("There should be a next line");
         let mut context: Vec<String> = vec![];
-        if self.mt.comment_pattern == next_line.trim() {
+        if self.comment_pattern == next_line.trim() {
             // Hit empty comment line: context delimiter.
             // Pick up everything until the end of the comment.
             self.pos += 2; // consume the delimiter line, start at line after.
             while self.pos < self.lines.len() {
                 let raw = self.lines.get(self.pos).expect("context line").trim();
-                let sans = raw.trim_start_matches(&self.mt.comment_pattern);
+                let sans = raw.trim_start_matches(&self.comment_pattern);
                 if raw.len() == sans.len() {
                     break;
                 }
@@ -118,7 +103,7 @@ impl Extractor {
         let mut idx = 0;
         while idx < line.len() {
             let c = &line[idx..idx + 1];
-            if c != SITUATIONAL && c != " " && c != SEVERITY {
+            if c != parser::SITUATIONAL && c != " " && c != parser::SEVERITY {
                 break;
             }
             idx += 1;
@@ -127,7 +112,7 @@ impl Extractor {
     }
 
     fn determine_severity(&self, line: &str) -> task::Severity {
-        let nosvt = &line.trim_start_matches(&SEVERITY);
+        let nosvt = &line.trim_start_matches(&parser::SEVERITY);
         task::Severity::new(line.len() - nosvt.len())
     }
 }
