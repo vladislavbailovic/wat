@@ -1,5 +1,8 @@
 use parser::Target;
 
+const TODO: &str = "TODO";
+const FIXME: &str = "FIXME";
+
 #[derive(Debug, Clone)]
 pub enum Type {
     TODO,
@@ -26,8 +29,8 @@ impl Type {
 
     pub fn kind(target: &str) -> Type {
         match target {
-            "TODO" => Type::TODO,
-            "FIXME" => Type::FIXME,
+            TODO => Type::TODO,
+            FIXME => Type::FIXME,
             kind => Type::Custom(kind.to_string()),
         }
     }
@@ -36,8 +39,8 @@ impl Type {
 impl Target for Type {
     fn target(&self) -> String {
         match self {
-            Type::TODO => String::from("TODO"),
-            Type::FIXME => String::from("FIXME"),
+            Type::TODO => String::from(TODO),
+            Type::FIXME => String::from(FIXME),
             Type::Custom(tgt) => tgt.to_string(),
         }
     }
