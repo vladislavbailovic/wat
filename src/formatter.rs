@@ -1,5 +1,5 @@
-mod text;
 mod html;
+mod text;
 use task;
 
 pub trait Renders {
@@ -15,7 +15,10 @@ pub trait Formats {
     fn get_title(&self, title: String) -> String;
 }
 
-impl<T> Renders for T where T: Formats {
+impl<T> Renders for T
+where
+    T: Formats,
+{
     fn render(&self, task: task::Task) {
         let out = self.formatted(task);
         if out.len() > 0 {

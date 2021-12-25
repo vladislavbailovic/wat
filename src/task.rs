@@ -9,7 +9,7 @@ pub enum Type {
 
 impl Type {
     pub fn list() -> Vec<Type> {
-        return vec!( Type::TODO, Type::FIXME );
+        return vec![Type::TODO, Type::FIXME];
     }
 
     pub fn list_with_additional(custom: Option<Vec<String>>) -> Vec<Type> {
@@ -25,7 +25,7 @@ impl Type {
     }
 
     pub fn kind(target: &str) -> Type {
-        match target{
+        match target {
             "TODO" => Type::TODO,
             "FIXME" => Type::FIXME,
             kind => Type::Custom(kind.to_string()),

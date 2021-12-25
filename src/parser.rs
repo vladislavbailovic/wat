@@ -2,14 +2,14 @@ pub const SEVERITY: &str = "!";
 pub const SITUATIONAL: &str = ":";
 
 pub trait Target {
-   fn target(&self) -> String; 
+    fn target(&self) -> String;
 }
 
 pub enum CommentStyle {
     Slc,
     Shell,
     Sql,
-    Custom(String)
+    Custom(String),
 }
 impl Target for CommentStyle {
     fn target(&self) -> String {

@@ -1,9 +1,9 @@
 mod mock;
 use mock::CODE;
+mod formatter;
 mod parser;
 mod pattern;
 mod task;
-mod formatter;
 
 use parser::Target;
 
@@ -22,7 +22,7 @@ fn main() {
                     f.delimiter(formatter::Delimiter::TASK, formatter::Point::START);
                     f.render(task);
                     f.delimiter(formatter::Delimiter::TASK, formatter::Point::END);
-                },
+                }
                 None => break,
             };
         }

@@ -1,5 +1,5 @@
-use task;
 use parser::{self, Target};
+use task;
 
 pub struct Extractor {
     target: String,
