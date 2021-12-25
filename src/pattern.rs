@@ -1,11 +1,20 @@
 use task;
 
 #[derive(Debug)]
+pub enum MatcherType {
+    Comment(String),
+    Situational(String),
+    Severity(String),
+    Target(String),
+}
+
+const SEVERITY: &str = "!";
+const SITUATIONAL: &str = ":";
+
+#[derive(Debug)]
 pub struct Matcher {
     kind: task::Type,
     target: String,
-    situational: String,
-    severity: String,
     comment_pattern: String,
 }
 
@@ -14,8 +23,6 @@ impl Matcher {
         Matcher {
             kind: kind.clone(),
             target: task::Type::target(&kind),
-            severity: String::from("!"),
-            situational: String::from(":"),
             comment_pattern: String::from("//"),
         }
     }
@@ -121,7 +128,7 @@ impl Extractor {
         let mut idx = 0;
         while idx < line.len() {
             let c = &line[idx..idx + 1];
-            if c != self.mt.situational && c != " " && c != self.mt.severity {
+            if c != SITUATIONAL && c != " " && c != SEVERITY {
                 break;
             }
             idx += 1;
@@ -130,7 +137,7 @@ impl Extractor {
     }
 
     fn determine_severity(&self, line: &str) -> task::Severity {
-        let nosvt = &line.trim_start_matches(&self.mt.severity);
+        let nosvt = &line.trim_start_matches(&SEVERITY);
         task::Severity::new(line.len() - nosvt.len())
     }
 }
